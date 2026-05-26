@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { connectWS } from '../../api/ws'
 
 export default function JoinLobby() {
   const [code, setCode] = useState('')
@@ -8,44 +7,24 @@ export default function JoinLobby() {
   const [error, setError] = useState('')
   const nav = useNavigate()
 
-  function join(e) {
-    e.preventDefault()
+  function join() {
     setError('')
-    connectWS(client => {
-      client.subscribe('/topic/lobby-error', msg => {
-        setError(JSON.parse(msg.body).error)
-      })
-
-      client.publish({
-        destination: '/app/lobby.join',
-        body: JSON.stringify({ lobbyCode: code, nickname }),
-      })
-
-      // Subscribe to lobby updates — sessionId will come from LobbyEvent
-      const sub = client.subscribe(`/topic/lobby.temp`, () => {})
-      sub.unsubscribe()
-
-      // Better: subscribe by broadcasting to all lobby.* and pick up the first event
-      client.subscribe(`/topic/lobby.${code}`, msg => {
-        // fallback — real session topic sub set in WaitingRoom
-      })
-
-      // Navigate optimistically, WaitingRoom will handle errors
-      localStorage.setItem('playerNickname', nickname)
-      localStorage.setItem('playerLobbyCode', code)
-      nav('/player/waiting')
-    })
+    if (!code.trim() || code.length !== 6) { setError('Podaj 6-cyfrowy kod'); return }
+    if (!nickname.trim()) { setError('Podaj nick'); return }
+    localStorage.setItem('playerNickname', nickname.trim())
+    localStorage.setItem('playerLobbyCode', code.trim())
+    nav('/player/waiting')
   }
 
   return (
     <div style={card}>
       <h2>Dołącz do gry</h2>
-      <form onSubmit={join} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <input placeholder="Kod (6 cyfr)" value={code} onChange={e => setCode(e.target.value)} maxLength={6} style={input} required />
-        <input placeholder="Twój nick" value={nickname} onChange={e => setNick(e.target.value)} style={input} required />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <input placeholder="Kod (6 cyfr)" value={code} onChange={e => setCode(e.target.value)} maxLength={6} style={input} />
+        <input placeholder="Twój nick" value={nickname} onChange={e => setNick(e.target.value)} style={input} />
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" style={btn}>Dołącz</button>
-      </form>
+        <button type="button" onClick={join} style={btn}>Dołącz</button>
+      </div>
     </div>
   )
 }

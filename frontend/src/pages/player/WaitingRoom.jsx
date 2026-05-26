@@ -14,35 +14,24 @@ export default function WaitingRoom() {
 
   useEffect(() => {
     if (!nickname || !lobbyCode) { nav('/player'); return }
+    let cancelled = false  // guards against StrictMode double-invoke
 
-    connectWS(client => {
-      setConnected(true)
+    // 1. Get sessionId via HTTP first
+    fetch(`/api/sessions/by-code?code=${lobbyCode}`)
+      .then(r => r.ok ? r.json() : Promise.reject('not found'))
+      .then(session => {
+        if (cancelled) return  // effect was cleaned up — skip
 
-      // Join lobby
-      client.publish({
-        destination: '/app/lobby.join',
-        body: JSON.stringify({ lobbyCode, nickname }),
-      })
+        const sessionId = session.sessionId
+        localStorage.setItem('playerSessionId', sessionId)
 
-      // Wait for lobby events — we need sessionId from LobbyEvent
-      // Backend broadcasts to /topic/lobby.{sessionId}
-      // We subscribe to a temp channel, then resubscribe with real sessionId
-      // Simpler approach: host shares session URL; for player we need sessionId.
-      // Solution: backend returns sessionId via /queue/player join ack,
-      // but since we don't have that, we use the HTTP fallback:
-      // Actually let's subscribe to all lobby events for this code via a wildcard.
-      // Since simple broker doesn't support wildcards, we use a search endpoint.
+        // 2. Connect WS → subscribe FIRST → then publish join
+        connectWS(c => {
+          if (cancelled) return  // guard in case cleanup ran during connection
+          setConnected(true)
 
-      // Pragmatic fix: GET /api/sessions?lobbyCode=XXXXXX to find sessionId
-      fetch(`/api/sessions/by-code?code=${lobbyCode}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(session => {
-          if (!session) { setError('Nie znaleziono sesji o kodzie ' + lobbyCode); return }
-
-          const sessionId = session.sessionId
-          localStorage.setItem('playerSessionId', sessionId)
-
-          subRef.current = client.subscribe(`/topic/lobby.${sessionId}`, msg => {
+          // Subscribe before publishing so we don't miss our own PLAYER_JOINED event
+          subRef.current = c.subscribe(`/topic/lobby.${sessionId}`, msg => {
             const event = JSON.parse(msg.body)
             if (event.type === 'PLAYER_JOINED') {
               setPlayers(event.participants ?? [])
@@ -52,22 +41,40 @@ export default function WaitingRoom() {
               nav('/player/game')
             }
           })
-        })
-        .catch(() => setError('Błąd połączenia z serwerem'))
-    })
 
-    return () => disconnectWS()
+          // Now send join — subscription is already active
+          c.publish({
+            destination: '/app/lobby.join',
+            body: JSON.stringify({ lobbyCode, nickname }),
+          })
+        })
+      })
+      .catch(() => { if (!cancelled) setError('Nie znaleziono sesji o kodzie ' + lobbyCode) })
+
+    return () => {
+      cancelled = true
+      disconnectWS()
+    }
   }, [])
 
-  if (error) return <div style={card}><p style={{ color: 'red' }}>{error}</p><button onClick={() => nav('/player')}>Wróć</button></div>
+  if (error) return (
+    <div style={card}>
+      <p style={{ color: 'red' }}>{error}</p>
+      <button type="button" onClick={() => nav('/player')} style={{ marginTop: 10, cursor: 'pointer' }}>Wróć</button>
+    </div>
+  )
 
   return (
     <div style={card}>
       <h2>Lobby — {lobbyCode}</h2>
       <p>Zalogowany jako: <strong>{nickname}</strong></p>
-      {!connected && <p>Łączenie...</p>}
+      {!connected && <p style={{ color: '#888' }}>Łączenie...</p>}
       <h3>Gracze ({players.length}):</h3>
-      <ul>{players.map(n => <li key={n} style={n === nickname ? { fontWeight: 'bold', color: '#1976d2' } : {}}>{n}</li>)}</ul>
+      <ul>
+        {players.map((n, i) => (
+          <li key={`${n}-${i}`} style={n === nickname ? { fontWeight: 'bold', color: '#1976d2' } : {}}>{n}</li>
+        ))}
+      </ul>
       <p style={{ color: '#888', marginTop: 20 }}>Czekaj na hosta...</p>
     </div>
   )

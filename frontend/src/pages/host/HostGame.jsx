@@ -17,18 +17,27 @@ export default function HostGame() {
   const hostId = localStorage.getItem('hostId')
 
   useEffect(() => {
-    http.get('/sessions/' + sessionId).then(r => setSession(r.data))
+    let cancelled = false
 
-    connectWS(client => {
-      clientRef.current = client
+    http.get('/sessions/' + sessionId).then(r => {
+      if (!cancelled) {
+        setSession(r.data)
+        // Seed participants from HTTP so the Start button is enabled even if PLAYER_JOINED event was missed
+        if (r.data.participants?.length) setPlayers(r.data.participants)
+      }
+    })
 
-      client.subscribe(`/topic/lobby.${sessionId}`, msg => {
+    connectWS(c => {
+      if (cancelled) return  // StrictMode guard — only the second effect mount survives
+      clientRef.current = c
+
+      c.subscribe(`/topic/lobby.${sessionId}`, msg => {
         const event = JSON.parse(msg.body)
         if (event.type === 'PLAYER_JOINED') setPlayers(event.participants ?? [])
         if (event.type === 'GAME_STARTED') { setPhase('PLAYING'); setStarted(true) }
       })
 
-      client.subscribe(`/topic/game.${sessionId}`, msg => {
+      c.subscribe(`/topic/game.${sessionId}`, msg => {
         const event = JSON.parse(msg.body)
         if (event.questionId) {
           setQuestion(event); setRanking(null); setPhase('PLAYING')
@@ -39,7 +48,7 @@ export default function HostGame() {
       })
     })
 
-    return () => disconnectWS()
+    return () => { cancelled = true; disconnectWS() }
   }, [sessionId])
 
   async function startGame() {

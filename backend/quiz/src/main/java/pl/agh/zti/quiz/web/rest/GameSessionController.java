@@ -2,6 +2,7 @@ package pl.agh.zti.quiz.web.rest;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.agh.zti.quiz.dto.ws.GameSessionResponse;
 import pl.agh.zti.quiz.service.GameService;
@@ -38,5 +39,16 @@ public class GameSessionController {
     @GetMapping("/by-code")
     public GameSessionResponse getByCode(@RequestParam String code) {
         return gameService.getSessionByCode(code);
+    }
+
+    /**
+     * Returns the currently active question, or 204 No Content if no question is active.
+     * PlayerGame calls this on mount to recover a question broadcast before it subscribed.
+     */
+    @GetMapping("/{id}/current-question")
+    public ResponseEntity<?> currentQuestion(@PathVariable UUID id) {
+        return gameService.getCurrentQuestion(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 }

@@ -16,8 +16,8 @@ export default function ManageQuiz() {
 
   useEffect(() => { load() }, [])
 
-  async function addQuestion(e) {
-    e.preventDefault()
+  async function addQuestion() {
+    if (!qContent.trim()) return
     await http.post(`/quizzes/${quizId}/questions`, { content: qContent, timeLimitSec: qTime ? +qTime : undefined })
     setQContent(''); setQTime(''); load()
   }
@@ -43,11 +43,11 @@ export default function ManageQuiz() {
 
       <div style={card}>
         <h3>Dodaj pytanie</h3>
-        <form onSubmit={addQuestion} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input placeholder="Treść pytania" value={qContent} onChange={e => setQContent(e.target.value)} style={{ ...input, flex: 1 }} required />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input placeholder="Treść pytania" value={qContent} onChange={e => setQContent(e.target.value)} style={{ ...input, flex: 1 }} />
           <input placeholder="Czas (s)" type="number" value={qTime} onChange={e => setQTime(e.target.value)} style={{ ...input, width: 80 }} />
-          <button type="submit" style={btn}>Dodaj</button>
-        </form>
+          <button type="button" onClick={addQuestion} style={btn}>Dodaj</button>
+        </div>
       </div>
 
       {quiz.questions.map((q, qi) => (

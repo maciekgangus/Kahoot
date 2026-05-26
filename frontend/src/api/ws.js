@@ -4,18 +4,19 @@ import SockJS from 'sockjs-client'
 let client = null
 
 export function connectWS(onConnected) {
-  client = new Client({
+  const c = new Client({
     webSocketFactory: () => new SockJS('/ws'),
-    reconnectDelay: 3000,
+    reconnectDelay: 0,
     onConnect: () => {
       console.log('[WS] Connected')
-      onConnected(client)
+      onConnected(c)  // use local ref, not global — avoids StrictMode double-invoke bug
     },
     onDisconnect: () => console.log('[WS] Disconnected'),
     onStompError: (frame) => console.error('[WS] STOMP error', frame),
   })
-  client.activate()
-  return client
+  client = c
+  c.activate()
+  return c
 }
 
 export function disconnectWS() {

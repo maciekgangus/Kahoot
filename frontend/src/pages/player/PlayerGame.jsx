@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { connectWS, disconnectWS } from '../../api/ws'
+import http from '../../api/http'
 import Timer from '../../components/Timer'
 import AnswerButton from '../../components/AnswerButton'
 import RankingTable from '../../components/RankingTable'
@@ -20,11 +21,13 @@ export default function PlayerGame() {
 
   useEffect(() => {
     if (!sessionId) { nav('/player'); return }
+    let cancelled = false
 
-    connectWS(client => {
-      clientRef.current = client
+    connectWS(c => {
+      if (cancelled) return  // StrictMode guard
+      clientRef.current = c
 
-      client.subscribe(`/topic/game.${sessionId}`, msg => {
+      c.subscribe(`/topic/game.${sessionId}`, msg => {
         const event = JSON.parse(msg.body)
         if (event.questionId) {
           setQuestion(event)
@@ -37,9 +40,22 @@ export default function PlayerGame() {
           setPhase(event.gameFinished ? 'FINISHED' : 'RANKING')
         }
       })
+
+      // After subscribing, recover any question that was broadcast before we connected
+      http.get(`/sessions/${sessionId}/current-question`)
+        .then(r => {
+          if (!cancelled && r.status === 200 && r.data?.questionId) {
+            setQuestion(r.data)
+            setSelected(null)
+            setRanking(null)
+            setPhase('QUESTION')
+            questionStartRef.current = Date.now()
+          }
+        })
+        .catch(() => {})  // 204 No Content or error → no active question, stay in WAITING
     })
 
-    return () => disconnectWS()
+    return () => { cancelled = true; disconnectWS() }
   }, [sessionId])
 
   function submitAnswer(answer) {
@@ -92,7 +108,9 @@ export default function PlayerGame() {
         <div>
           <h2>🏆 Koniec!</h2>
           <RankingTable ranking={ranking.ranking} />
-          <button onClick={() => nav('/player')} style={{ marginTop: 20, padding: '12px 24px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Wróć do strony głównej</button>
+          <button type="button" onClick={() => nav('/player')} style={{ marginTop: 20, padding: '12px 24px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+            Wróć do strony głównej
+          </button>
         </div>
       )}
     </div>

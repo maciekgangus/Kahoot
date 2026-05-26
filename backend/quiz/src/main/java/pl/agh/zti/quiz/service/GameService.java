@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import pl.agh.zti.quiz.domain.*;
 import pl.agh.zti.quiz.dto.ws.*;
 import pl.agh.zti.quiz.repository.*;
@@ -33,6 +34,7 @@ public class GameService {
     private final RankingService rankingService;
     private final SimpMessagingTemplate broker;
     private final TaskScheduler taskScheduler;
+    private final TransactionTemplate txTemplate;
 
     /** Tracks active timeout futures per session — allows cancellation if all players answer early. */
     private final Map<UUID, ScheduledFuture<?>> timeoutFutures = new HashMap<>();
@@ -66,6 +68,33 @@ public class GameService {
         GameSession session = sessionRepo.findByLobbyCode(lobbyCode)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found for code: " + lobbyCode));
         return GameSessionResponse.from(session);
+    }
+
+    /**
+     * Returns the currently active question for a session (if state == QUESTION_ACTIVE).
+     * Used by PlayerGame to recover a question that was broadcast before the player subscribed.
+     */
+    @Transactional(readOnly = true)
+    public Optional<QuestionEvent> getCurrentQuestion(UUID sessionId) {
+        GameSession session = findSession(sessionId);
+        if (session.getState() != GameState.QUESTION_ACTIVE) return Optional.empty();
+
+        List<Question> questions = session.getQuiz().getQuestions();
+        int idx = session.getCurrentQuestionIndex();
+        Question q = questions.get(idx);
+        List<AnswerOption> options = q.getAnswers().stream()
+                .map(a -> AnswerOption.builder().id(a.getId()).content(a.getContent()).build())
+                .toList();
+
+        return Optional.of(QuestionEvent.builder()
+                .questionId(q.getId())
+                .content(q.getContent())
+                .answers(options)
+                .timeLimitSec(q.resolvedTimeLimitSec())
+                .questionNumber(idx + 1)
+                .totalQuestions(questions.size())
+                .serverTimestamp(System.currentTimeMillis())
+                .build());
     }
 
     // ---- WebSocket handlers ----
@@ -283,11 +312,15 @@ public class GameService {
 
     private void handleTimeout(UUID sessionId) {
         log.info("Question timeout for session {}", sessionId);
-        sessionRepo.findById(sessionId).ifPresent(session -> {
-            if (session.getState() == GameState.QUESTION_ACTIVE) {
-                evaluateRound(session);
-            }
-        });
+        // Run inside a transaction: scheduler thread has no Hibernate session by default.
+        // Without this, lazy-loading Quiz.questions throws LazyInitializationException.
+        txTemplate.executeWithoutResult(status ->
+            sessionRepo.findById(sessionId).ifPresent(session -> {
+                if (session.getState() == GameState.QUESTION_ACTIVE) {
+                    evaluateRound(session);
+                }
+            })
+        );
         timeoutFutures.remove(sessionId);
     }
 

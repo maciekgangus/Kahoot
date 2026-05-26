@@ -15,8 +15,8 @@ export default function Dashboard() {
     http.get('/quizzes', { params: { hostId } }).then(r => setQuizzes(r.data))
   }, [])
 
-  async function createQuiz(e) {
-    e.preventDefault()
+  async function createQuiz() {
+    if (!title.trim()) return
     const r = await http.post('/quizzes', { title, description: desc, defaultTimeLimitSec: timeLimit }, { params: { hostId } })
     nav('/host/quiz/' + r.data.id)
   }
@@ -27,12 +27,12 @@ export default function Dashboard() {
 
       <div style={card}>
         <h3>Nowy Quiz</h3>
-        <form onSubmit={createQuiz} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input placeholder="Tytuł" value={title} onChange={e => setTitle(e.target.value)} style={input} required />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <input placeholder="Tytuł" value={title} onChange={e => setTitle(e.target.value)} style={input} />
           <input placeholder="Opis" value={desc} onChange={e => setDesc(e.target.value)} style={input} />
           <label>Domyślny czas (s): <input type="number" min={5} max={120} value={timeLimit} onChange={e => setTimeLimit(+e.target.value)} style={{ ...input, width: 70 }} /></label>
-          <button type="submit" style={btn}>Utwórz Quiz</button>
-        </form>
+          <button type="button" onClick={createQuiz} style={btn}>Utwórz Quiz</button>
+        </div>
       </div>
 
       <h3>Twoje Quizy</h3>

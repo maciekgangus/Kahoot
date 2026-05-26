@@ -8,8 +8,7 @@ export default function Register() {
   const [error, setError] = useState('')
   const nav = useNavigate()
 
-  async function submit(e) {
-    e.preventDefault()
+  async function submit() {
     setError('')
     try {
       const res = await http.post('/hosts/register', { username, password })
@@ -24,13 +23,13 @@ export default function Register() {
   return (
     <div style={card}>
       <h2>Zarejestruj się jako Host</h2>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <input placeholder="Login" value={username} onChange={e => setUsername(e.target.value)} style={input} />
         <input placeholder="Hasło" type="password" value={password} onChange={e => setPassword(e.target.value)} style={input} />
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" style={btn}>Zarejestruj</button>
+        <button type="button" onClick={submit} style={btn}>Zarejestruj</button>
         <button type="button" style={{ ...btn, background: '#888' }} onClick={() => nav('/')}>Wróć</button>
-      </form>
+      </div>
     </div>
   )
 }
