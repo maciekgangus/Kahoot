@@ -1,0 +1,29 @@
+# Maven
+backend/quiz/target/
+backend/quiz/.mvn/wrapper/
+!backend/quiz/mvnw
+!backend/quiz/mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local

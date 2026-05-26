@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    # Testcontainers dynamic URL — overridden by @ServiceConnection in test config
+    url: jdbc:tc:postgresql:16:///quiz
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
