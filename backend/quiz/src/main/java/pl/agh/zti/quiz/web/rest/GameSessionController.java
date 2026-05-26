@@ -1,0 +1,36 @@
+package pl.agh.zti.quiz.web.rest;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import pl.agh.zti.quiz.dto.ws.GameSessionResponse;
+import pl.agh.zti.quiz.service.GameService;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/sessions")
+@RequiredArgsConstructor
+public class GameSessionController {
+
+    private final GameService gameService;
+
+    /** Host creates a game session for a given quiz. */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public GameSessionResponse create(@RequestParam Long quizId, @RequestParam Long hostId) {
+        return gameService.createSession(quizId, hostId);
+    }
+
+    @GetMapping("/{id}")
+    public GameSessionResponse get(@PathVariable UUID id) {
+        return gameService.getSession(id);
+    }
+
+    /** Host starts the game (moves from LOBBY to QUESTION_ACTIVE). */
+    @PostMapping("/{id}/start")
+    public GameSessionResponse start(@PathVariable UUID id, @RequestParam Long hostId) {
+        gameService.startGame(id, hostId);
+        return gameService.getSession(id);
+    }
+}
