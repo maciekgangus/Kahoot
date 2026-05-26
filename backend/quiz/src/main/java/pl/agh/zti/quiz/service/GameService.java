@@ -61,6 +61,13 @@ public class GameService {
         return GameSessionResponse.from(findSession(sessionId));
     }
 
+    @Transactional(readOnly = true)
+    public GameSessionResponse getSessionByCode(String lobbyCode) {
+        GameSession session = sessionRepo.findByLobbyCode(lobbyCode)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found for code: " + lobbyCode));
+        return GameSessionResponse.from(session);
+    }
+
     // ---- WebSocket handlers ----
 
     /**

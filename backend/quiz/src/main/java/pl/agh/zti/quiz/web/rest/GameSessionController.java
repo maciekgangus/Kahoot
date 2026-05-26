@@ -33,4 +33,10 @@ public class GameSessionController {
         gameService.startGame(id, hostId);
         return gameService.getSession(id);
     }
+
+    /** Player looks up session by lobby code (needed for WS subscription). */
+    @GetMapping("/by-code")
+    public GameSessionResponse getByCode(@RequestParam String code) {
+        return gameService.getSessionByCode(code);
+    }
 }
