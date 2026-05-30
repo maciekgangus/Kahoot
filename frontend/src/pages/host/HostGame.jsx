@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { connectWS, disconnectWS } from '../../api/ws'
 import http from '../../api/http'
 import RankingTable from '../../components/RankingTable'
+import { QRCode } from 'react-qr-code'
 
 export default function HostGame() {
   const { sessionId } = useParams()
@@ -70,10 +71,19 @@ export default function HostGame() {
       <p><strong>Kod lobby:</strong> <span style={{ fontSize: 28, letterSpacing: 6, fontFamily: 'monospace', color: '#1976d2' }}>{session.lobbyCode}</span></p>
 
       {phase === 'LOBBY' && (
-        <div>
-          <h3>Gracze w lobby ({players.length}):</h3>
-          <ul>{players.map(n => <li key={n}>{n}</li>)}</ul>
-          <button onClick={startGame} style={btn} disabled={players.length === 0}>▶ Start!</button>
+        <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h3>Gracze w lobby ({players.length}):</h3>
+            <ul>{players.map(n => <li key={n}>{n}</li>)}</ul>
+            <button onClick={startGame} style={btn} disabled={players.length === 0}>▶ Start!</button>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: 8, color: '#555', fontSize: 14 }}>Zeskanuj, aby dołączyć</p>
+            <div style={{ background: '#fff', padding: 12, borderRadius: 12, display: 'inline-block', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+              <QRCode value={`${window.location.origin}/player?code=${session.lobbyCode}`} size={160} />
+            </div>
+            <p style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 22, letterSpacing: 6, color: '#1976d2', fontWeight: 'bold' }}>{session.lobbyCode}</p>
+          </div>
         </div>
       )}
 
