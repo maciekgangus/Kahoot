@@ -30,6 +30,6 @@ export default function JoinLobby() {
   )
 }
 
-const card = { maxWidth: 380, margin: '80px auto', padding: 32, background: '#fff', borderRadius: 14, boxShadow: '0 2px 20px rgba(0,0,0,.15)' }
-const input = { padding: '12px', fontSize: 18, borderRadius: 8, border: '1px solid #ccc', textAlign: 'center' }
-const btn = { padding: '14px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 10, fontSize: 18, cursor: 'pointer' }
+const card = { maxWidth: 380, margin: '32px auto', padding: '28px 20px', background: '#fff', borderRadius: 14, boxShadow: '0 2px 20px rgba(0,0,0,.15)' }
+const input = { padding: '14px', fontSize: 18, borderRadius: 8, border: '1px solid #ccc', textAlign: 'center', width: '100%', boxSizing: 'border-box' }
+const btn = { padding: '16px', background: '#e53935', color: '#fff', border: 'none', borderRadius: 10, fontSize: 18, cursor: 'pointer', touchAction: 'manipulation', width: '100%' }

@@ -9,13 +9,17 @@ export default function AnswerButton({ answer, index, onClick, disabled, selecte
         background: selected ? '#555' : COLORS[index % 4],
         color: '#fff',
         border: 'none',
-        borderRadius: 8,
-        padding: '18px 12px',
-        fontSize: 16,
+        borderRadius: 12,
+        padding: '20px 12px',
+        fontSize: 17,
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled && !selected ? 0.5 : 1,
-        fontWeight: selected ? 'bold' : 'normal',
+        fontWeight: 'bold',
         transition: 'opacity 0.2s',
+        touchAction: 'manipulation',  // eliminates 300ms tap delay on mobile
+        minHeight: 64,
+        wordBreak: 'break-word',
+        width: '100%',
       }}
     >
       {answer.content}

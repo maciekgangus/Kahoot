@@ -80,4 +80,4 @@ export default function WaitingRoom() {
   )
 }
 
-const card = { maxWidth: 420, margin: '50px auto', padding: 32, background: '#fff', borderRadius: 14, boxShadow: '0 2px 20px rgba(0,0,0,.15)' }
+const card = { maxWidth: 420, margin: '20px auto', padding: '24px 20px', background: '#fff', borderRadius: 14, boxShadow: '0 2px 20px rgba(0,0,0,.15)' }

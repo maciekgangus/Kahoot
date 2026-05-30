@@ -76,39 +76,39 @@ export default function PlayerGame() {
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: '30px auto', padding: 24 }}>
-      <p style={{ color: '#888' }}>{nickname}</p>
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: '16px 16px env(safe-area-inset-bottom, 16px)' }}>
+      <p style={{ color: '#888', margin: '8px 0 4px', fontSize: 14 }}>{nickname}</p>
 
-      {phase === 'WAITING' && <p>Czekaj na pytanie...</p>}
+      {phase === 'WAITING' && <p style={{ marginTop: 40, textAlign: 'center', color: '#555' }}>Czekaj na pytanie...</p>}
 
       {phase === 'QUESTION' && question && (
         <div>
-          <p style={{ color: '#888' }}>Pytanie {question.questionNumber}/{question.totalQuestions}</p>
+          <p style={{ color: '#888', margin: '0 0 4px', fontSize: 13 }}>Pytanie {question.questionNumber}/{question.totalQuestions}</p>
           <Timer seconds={question.timeLimitSec} />
-          <h2 style={{ marginBottom: 20 }}>{question.content}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <h2 style={{ margin: '12px 0 16px', fontSize: 'clamp(18px, 5vw, 26px)', lineHeight: 1.3 }}>{question.content}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
             {question.answers.map((a, i) => (
               <AnswerButton key={a.id} answer={a} index={i} onClick={submitAnswer}
                 disabled={!!selected} selected={selected === a.id} />
             ))}
           </div>
-          {selected && <p style={{ marginTop: 16, color: '#555' }}>Odpowiedź wysłana! Czekaj na wyniki...</p>}
+          {selected && <p style={{ marginTop: 16, color: '#555', textAlign: 'center' }}>Odpowiedź wysłana! Czekaj na wyniki...</p>}
         </div>
       )}
 
       {phase === 'RANKING' && ranking && (
         <div>
-          <h3>Ranking po rundzie {ranking.currentQuestion}/{ranking.totalQuestions}</h3>
+          <h3 style={{ margin: '12px 0' }}>Ranking po rundzie {ranking.currentQuestion}/{ranking.totalQuestions}</h3>
           <RankingTable ranking={ranking.ranking} />
-          <p style={{ color: '#888', marginTop: 12 }}>Czekaj na następne pytanie...</p>
+          <p style={{ color: '#888', marginTop: 12, textAlign: 'center' }}>Czekaj na następne pytanie...</p>
         </div>
       )}
 
       {phase === 'FINISHED' && ranking && (
         <div>
-          <h2>🏆 Koniec!</h2>
+          <h2 style={{ textAlign: 'center' }}>🏆 Koniec!</h2>
           <RankingTable ranking={ranking.ranking} />
-          <button type="button" onClick={() => nav('/player')} style={{ marginTop: 20, padding: '12px 24px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+          <button type="button" onClick={() => nav('/player')} style={backBtn}>
             Wróć do strony głównej
           </button>
         </div>
@@ -116,3 +116,5 @@ export default function PlayerGame() {
     </div>
   )
 }
+
+const backBtn = { marginTop: 20, padding: '14px', width: '100%', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, cursor: 'pointer', touchAction: 'manipulation' }
