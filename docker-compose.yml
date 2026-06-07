@@ -18,5 +18,32 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: backend/quiz
+      dockerfile: Dockerfile
+    container_name: quiz-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/quiz
+      SPRING_DATASOURCE_USERNAME: quiz
+      SPRING_DATASOURCE_PASSWORD: quiz
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: quiz-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
 volumes:
   postgres_data:
