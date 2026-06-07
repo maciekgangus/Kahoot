@@ -22,6 +22,11 @@ public class HostController {
         return quizService.registerHost(req);
     }
 
+    @PostMapping("/login")
+    public HostResponse login(@Valid @RequestBody HostRequest req) {
+        return quizService.loginHost(req);
+    }
+
     @GetMapping("/{id}")
     public HostResponse get(@PathVariable Long id) {
         return quizService.getHost(id);

@@ -34,9 +34,19 @@ public class QuizService {
         }
         Host host = Host.builder()
                 .username(req.getUsername())
-                .passwordHash(req.getPassword()) // plain for now — no auth required per spec
+                .passwordHash(req.getPassword())
                 .build();
         return HostResponse.from(hostRepo.save(host));
+    }
+
+    @Transactional(readOnly = true)
+    public HostResponse loginHost(HostRequest req) {
+        Host host = hostRepo.findByUsername(req.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+        if (!host.getPasswordHash().equals(req.getPassword())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+        return HostResponse.from(host);
     }
 
     @Transactional(readOnly = true)

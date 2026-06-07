@@ -12,8 +12,8 @@ export default function Home() {
           <p>Twórz quizy i prowadź sesje</p>
           <button style={btnHost} onClick={() => nav('/host/register')}>Zarejestruj się</button>
           <br /><br />
-          <button style={{ ...btnHost, background: '#888' }} onClick={() => { nav('/host/dashboard') }}>
-            Mam już konto → Panel
+          <button style={{ ...btnHost, background: '#888' }} onClick={() => nav('/host/login')}>
+            Mam już konto → Zaloguj
           </button>
         </div>
         <div style={card}>
