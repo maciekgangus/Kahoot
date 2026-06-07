@@ -35,7 +35,9 @@ export default function WaitingRoom() {
             const event = JSON.parse(msg.body)
             if (event.type === 'PLAYER_JOINED') {
               setPlayers(event.participants ?? [])
-              if (event.playerId) localStorage.setItem('playerId', event.playerId)
+              if (event.playerId && event.nickname === nickname) {
+                localStorage.setItem('playerId', event.playerId)
+              }
             }
             if (event.type === 'GAME_STARTED') {
               nav('/player/game')
